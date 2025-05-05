@@ -1,0 +1,26 @@
+__pycache__/
+venv/
+env/
+ENV/
+*.egg-info/
+pip-log.txt
+
+logs/
+*.out
+*.err
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code settings
+.vscode/
+
+# Python cache
+*.pyo
+*.pyd
+
+
+# __init__ backup files
+*.bak
+
