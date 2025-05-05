@@ -51,14 +51,16 @@ class HopfCNN(nn.Module):
             nn.Conv2d(base_channels*4, base_channels*8, 3, padding=1),
             nn.BatchNorm2d(base_channels*8),
             nn.ReLU(inplace=True),
-            nn.AdaptiveAvgPool2d((1,1))
+            nn.AdaptiveAvgPool2d((1,1)))
+        
         
         # Класифікатор
         self.classifier = nn.Sequential(
             nn.Linear(base_channels*8, base_channels*4),
             nn.ReLU(inplace=True),
             nn.Dropout(0.3),
-            nn.Linear(base_channels*4, num_classes))
+            nn.Linear(base_channels*4, num_classes)
+        )
         
         # Ініціалізація ваг
         self._initialize_weights()
