@@ -21,34 +21,27 @@ def _extract_array(obj):
             except: continue
     raise ValueError("No ndarray in raw")
 
-class MinesDataset(Dataset):
-    def __init__(self, split='train', transform=None):
-        self.transform = transform
-        data_dir = os.path.join(os.path.dirname(__file__), 'giuriati_2')
-        files = sorted(f for f in os.listdir(data_dir) if f.endswith('.npy'))
-        vols = []
-        for fn in files:
-            raw = np.load(os.path.join(data_dir, fn), allow_pickle=True)
-            arr = _extract_array(raw).astype(np.float32)
-            vols.append(arr)
-        self.vols = vols
-        # Flatten all slices into list of (vol_idx, slice_idx)
-        self.index = []
-        for vid, vol in enumerate(self.vols):
-            D = vol.shape[0]
-            for z in range(D):
-                self.index.append((vid,z))
-        # Optionally split train/val here by slicing index list
-
-    def __len__(self):
-        return len(self.index)
-
-    def __getitem__(self, idx):
-        vid,z = self.index[idx]
-        slice2d = self.vols[vid][z]             # shape (H,W)
-        img = torch.from_numpy(slice2d).unsqueeze(0)  # (1,H,W)
-        mask = (slice2d>slice2d.mean()).astype(np.float32)
-        mask = torch.from_numpy(mask).unsqueeze(0)
+class MineDataset(Dataset):
+    def init(self, img_dir, transform=None):
+        self.img_dir = Path(img_dir)
+        self.samples = list(self.img_dir.glob('**/*.png'))
+        self.transform = transform or self._default_transform()
+        
+    def _default_transform(self):
+        return A.Compose([
+            A.RandomResizedCrop(224, 224),
+            A.HorizontalFlip(p=0.5),
+            A.VerticalFlip(p=0.5),
+            A.Normalize(mean=[0.485, 0.456, 0.406], 
+                        std=[0.229, 0.224, 0.225])
+        ])
+    
+    def getitem(self, idx):
+        img_path = self.samples[idx]
+        img = cv2.imread(str(img_path))[:,:,::-1]  # BGR to RGB
+        
         if self.transform:
-            img,mask = self.transform(img,mask)
-        return img,mask
+            img = self.transform(image=img)['image']
+        
+        label = 1 if 'mine' in img_path.parent.name else 0
+        return torch.FloatTensor(img).permute(2,0,1), torch.tensor(label)
