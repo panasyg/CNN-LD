@@ -1,52 +1,36 @@
+import numpy as np
 import tensorflow as tf
 from utils.preprocessing import load_processed_data
 from models.hopf_autoencoder import build_hopf_autoencoder
-import yaml
-import os
-
-def load_config():
-    with open('configs/params.yaml') as f:
-        return yaml.safe_load(f)
 
 def main():
-    config = load_config()
+    # Load and prepare data
+    train_data, _ = load_processed_data('data/processed')
     
-    # Завантаження оброблених даних
-    train_data, train_labels = load_processed_data(os.path.join('data', 'processed', 'train'))
+    # Add channel dimension if missing and ensure float32
+    if train_data.ndim == 3:
+        train_data = np.expand_dims(train_data, axis=-1)
+    train_data = train_data.astype(np.float32)
     
-    # Побудова моделі
-    model = build_hopf_autoencoder(
-        input_shape=config['model']['input_shape'],
-        hopf_units=config['model']['hopf_units']
-    )
+    # Build model
+    model = build_hopf_autoencoder(input_shape=train_data.shape[1:])
+    model.compile(optimizer='adam', loss='mse')
     
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(config['model']['learning_rate']),
-        loss='binary_crossentropy',
-        metrics=['accuracy']
-    )
-    
-    # Callbacks
-    callbacks = [
-        tf.keras.callbacks.EarlyStopping(
-            patience=config['training']['early_stopping_patience'],
-            restore_best_weights=True
-        ),
-        tf.keras.callbacks.ModelCheckpoint(
-            'models/best_model.h5',
-            save_best_only=True
-        ),
-        tf.keras.callbacks.TensorBoard(log_dir='logs')
-    ]
-    
-    # Навчання
-    history = model.fit(
-        train_data, train_data,  # Автоенкодер
-        batch_size=config['training']['batch_size'],
-        epochs=config['training']['epochs'],
+    # Train with reduced batch size
+    model.fit(
+        train_data, train_data,
+        batch_size=1,  # Small batch due to memory constraints
+        epochs=50,
         validation_split=0.2,
-        callbacks=callbacks
+        callbacks=[
+            tf.keras.callbacks.EarlyStopping(patience=5),
+            tf.keras.callbacks.ModelCheckpoint(
+                'model.h5',
+                save_best_only=True,
+                monitor='val_loss'
+            )
+        ]
     )
 
-if name == "main":
+if __name__ == "__main__":
     main()
