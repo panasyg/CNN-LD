@@ -1,0 +1,18 @@
+data:
+  input_file: "20170621_deg0_HHVV.npy"
+  output_dir: "processed"
+  
+preprocessing:
+  test_size: 0.2
+  clip_limit: 3.0
+  median_filter_size: 3
+
+model:
+  input_shape: [66, 170, 440, 1]  # Відповідає shape вашого датасету
+  hopf_units: 64
+  learning_rate: 0.001
+  
+training:
+  epochs: 50
+  batch_size: 8
+  early_stopping_patience: 5
