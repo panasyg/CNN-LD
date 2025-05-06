@@ -3,9 +3,9 @@ from .preprocessing import (
     load_raw_data,
     normalize_volume,
     preprocess_volume,
-    save_processed_data,
+    save_processed,
     load_processed_data,
-    full_preprocessing_pipeline
+    full_pipeline
 )
 from .visualization import (
     plot_slices,
@@ -21,9 +21,9 @@ all = [
     'load_raw_data',
     'normalize_volume',
     'preprocess_volume',
-    'save_processed_data',
+    'save_processed',
     'load_processed_data',
-    'full_preprocessing_pipeline',
+    'full_pipeline',
     'plot_slices',
     'plot_learning_curve',
     'calculate_iou',
